@@ -80,12 +80,8 @@ jobs:
     executor: << parameters.os >>
     steps:
       - checkout
-      - run:
-          name: "Install Rust toolchain"
-          command: rust/install
-      - run:
-          name: "Test xshell scripts"
-          command: rust/test
+      - rust/install
+      - rust/test
 
   # TODO: Create a script to install nix on Linux _and_ macOS; don't use the default Docker image
   build-scripts:
@@ -97,8 +93,6 @@ jobs:
     executor: << parameters.os >>
     steps:
       - checkout
-      - run:
-          name: "Install Rust"
-          command: rust/install
+      - rust/install
       - rust/build:
           release: true
