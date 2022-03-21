@@ -152,9 +152,15 @@ impl NixInstaller {
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("workdir has not been created"))?
             .path()
-            .join("installer");
-        let options = self.installer_options.join(" ");
-        cmd!(self.shell, "sh {installer} {options}").quiet().run()?;
+            .join("install");
+        let options = self
+            .installer_options
+            .iter()
+            .filter(|opt| !opt.is_empty())
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(" ");
+        cmd!(self.shell, "sh {installer} {options}").run()?;
         Ok(())
     }
 
