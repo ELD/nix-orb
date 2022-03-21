@@ -5,7 +5,7 @@ orbs:
   shellcheck: circleci/shellcheck@3.1
 
 executors:
-  linux-docker:
+  linux:
     docker:
       - image: cimg/base:stable
   linux-machine:
@@ -19,13 +19,16 @@ workflows:
   lint-pack:
     jobs:
       - test-scripts:
+          matrix:
+            parameters:
+              os: [linux-machine, macos]
           filters:
             tags:
               only: /.*/
       # - build-scripts:
       #     matrix:
       #       parameters:
-      #         os: [linux, macos]
+      #         os: [linux-machine, macos]
       #     filters:
       #       tags:
       #         only: /.*/
@@ -68,8 +71,12 @@ workflows:
 
 jobs:
   test-scripts:
-    docker:
-      - image: cimg/rust:1.59.0
+    parameters:
+      os:
+        description: "executor to run the job against"
+        type: executor
+        default: linux
+    executor: << parameters.os >>
     steps:
       - checkout
       - run:
@@ -80,7 +87,7 @@ jobs:
   build-scripts:
     parameters:
       os:
-        description: "An array of executors to run the job against"
+        description: "executor to run the job against"
         type: executor
         default: linux
     executor: << parameters.os >>
