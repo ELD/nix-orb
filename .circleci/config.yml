@@ -83,7 +83,8 @@ jobs:
     steps:
       - checkout
       - rust/install
-      - rust/test
+      - rust/test:
+          with_cache: false
 
   # TODO: Create a script to install nix on Linux _and_ macOS; don't use the default Docker image
   build-scripts:
@@ -115,3 +116,4 @@ jobs:
           steps:
             - rust/build:
                 release: true
+                with_cache: false
