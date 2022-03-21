@@ -6,13 +6,13 @@ orbs:
   rust: circleci/rust@1.6.0
 
 executors:
-  linux:
+  linux: &linux
     docker:
       - image: cimg/base:stable
-  linux-machine:
+  linux-machine: &linux-machine
     machine:
       image: ubuntu-2004:202111-02
-  macos:
+  macos: &macos
     macos:
       xcode: 13.3.0
 
@@ -26,13 +26,13 @@ workflows:
           filters:
             tags:
               only: /.*/
-      # - build-scripts:
-      #     matrix:
-      #       parameters:
-      #         os: [linux-machine, macos]
-      #     filters:
-      #       tags:
-      #         only: /.*/
+      - build-scripts:
+          matrix:
+            parameters:
+              os: [linux-machine, macos]
+          filters:
+            tags:
+              only: /.*/
       # - copy-scripts:
       #     filters:
       #       tags:
@@ -94,5 +94,22 @@ jobs:
     steps:
       - checkout
       - rust/install
-      - rust/build:
-          release: true
+      - when:
+          condition:
+            or:
+            - equal: [*linux, << parameters.os >>]
+            - equal: [*linux-machine, << parameters.os >>]
+          steps:
+            - run:
+                name: "Add Linux musl target"
+                command: rustup target add x86_64-unknown-linux-musl
+            - run:
+                name: "Build for musl (static binary)"
+                command: cargo build --release --target=x86_64-unknown-linux-musl
+      - when:
+          condition:
+            or:
+            - equal: [*macos, << parameters.os >>]
+          steps:
+            - rust/build:
+                release: true
