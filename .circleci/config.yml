@@ -69,21 +69,9 @@ workflows:
 jobs:
   test-scripts:
     docker:
-      - image: nixpkgs/nix:latest
+      - image: cimg/rust:1.59.0
     steps:
       - checkout
-      - run:
-          name: "Add Default Channel"
-          command: |
-            mkdir -p /etc/nix /root
-            echo "sandbox = false" >> /etc/nix/nix.conf
-            nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
-            nix-channel --update
-      - run:
-          name: "Install Rust"
-          command: |
-            nix-env -iA nixpkgs.rustup nixpkgs.gcc
-            rustup install stable
       - run:
           name: "Test xshell scripts"
           command: cargo test
