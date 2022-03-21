@@ -33,10 +33,12 @@ workflows:
           filters:
             tags:
               only: /.*/
+          requires: [test-scripts]
       # - copy-scripts:
       #     filters:
       #       tags:
       #         only: /.*/
+      #     requires: [build-scripts]
       - orb-tools/lint:
           filters:
             tags:
@@ -55,7 +57,7 @@ workflows:
           orb-name: eld/cachix
           requires:
             [
-              test-scripts,
+              build-scripts,
               orb-tools/lint,
               orb-tools/review,
               orb-tools/pack,
