@@ -113,7 +113,9 @@ jobs:
                 command: cargo build --release --target=x86_64-unknown-linux-musl
             - run:
                 name: "Test Invocation"
-                command: target/x86_64-unknown-linux-musl/release/install-nix
+                command: |
+                  echo $TTY
+                  target/x86_64-unknown-linux-musl/release/install-nix
       - when:
           condition:
             or:

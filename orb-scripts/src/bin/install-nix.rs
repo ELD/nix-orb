@@ -55,11 +55,9 @@ impl NixInstaller {
             .shell
             .var("EXTRA_NIX_CONFIG")
             .unwrap_or_else(|_| "".to_string());
-        let mut config = vec![
-            "max-jobs = auto",
-            "trust-users = root $USER",
-            &extra_nix_config,
-        ];
+        let user = self.shell.var("USER")?;
+        let trusted_user = format!("trusted-users = root {user}");
+        let mut config = vec!["max-jobs = auto", &trusted_user, &extra_nix_config];
 
         if !extra_nix_config.contains("experimental-features") {
             config.push("experimental-features = nix-command flakes");
