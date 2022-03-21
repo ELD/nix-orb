@@ -3,6 +3,7 @@ setup: true
 orbs:
   orb-tools: circleci/orb-tools@11.1.2
   shellcheck: circleci/shellcheck@3.1
+  rust: circleci/rust@1.6.0
 
 executors:
   linux:
@@ -79,9 +80,10 @@ jobs:
     executor: << parameters.os >>
     steps:
       - checkout
-      - run:
+      - rust/install:
+          name: "Install Rust toolchain"
+      - rust/test:
           name: "Test xshell scripts"
-          command: cargo test
 
   # TODO: Create a script to install nix on Linux _and_ macOS; don't use the default Docker image
   build-scripts:
