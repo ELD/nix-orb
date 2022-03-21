@@ -85,11 +85,11 @@ mod tests {
 
     #[cfg(target_os = "linux")]
     #[test]
-    fn identifies_os_as_macos() {
+    fn identifies_os_as_linux() {
         let sh = setup();
         let os = detect_os(&sh);
         assert!(os.is_ok());
-        assert_eq!(os.unwrap(), OperatingSystem::MacOS);
+        assert_eq!(os.unwrap(), OperatingSystem::Linux);
     }
 
     #[test]
