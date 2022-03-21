@@ -33,7 +33,7 @@ impl NixInstaller {
 
     /// Check if nix is already installed; returns Err is it is
     pub fn nix_not_installed(&self) -> Result<(), anyhow::Error> {
-        if cmd!(self.shell, "type -p nix").quiet().run().is_ok() {
+        if cmd!(self.shell, "type -p nix").run().is_ok() {
             println!("Nix is already installed; skipping installation");
             return Err(anyhow::anyhow!(
                 "Nix is present on the system; skipping installation"
@@ -88,24 +88,27 @@ impl NixInstaller {
             .workdir
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("workdir has not been created"))?
-            .path();
-        let config_file_flag = format!("--nix-extra-conf-file \"{}/nix.conf\"", workdir.display());
+            .path()
+            .to_str()
+            .ok_or_else(|| anyhow::anyhow!("workdir path is invalid"))?;
         self.installer_options.push("--no-channel-add".to_string());
         self.installer_options
             .push("--darwin-use-unencrypted-nix-store-volume".to_string());
-        self.installer_options.push(config_file_flag);
+        self.installer_options
+            .push("--nix-extra-conf-file".to_string());
+        self.installer_options.push(format!("{workdir}/nix.conf"));
 
         match os {
             OperatingSystem::MacOS | OperatingSystem::LinuxSystemD => {
-                let daemon_user_count = format!("--daemon-user-count {}", num_cpus::get() * 2);
                 self.installer_options.push("--daemon".to_string());
-                self.installer_options.push(daemon_user_count)
+                self.installer_options
+                    .push("--daemon-user-count".to_string());
+                self.installer_options
+                    .push(format!("{}", num_cpus::get() * 2));
             }
             OperatingSystem::Linux => {
                 self.shell.create_dir("/etc/nix")?;
-                cmd!(self.shell, "cp {workdir}/nix.conf /etc/nix/nix.conf")
-                    .quiet()
-                    .run()?;
+                cmd!(self.shell, "cp {workdir}/nix.conf /etc/nix/nix.conf").run()?;
             }
         }
 
@@ -139,7 +142,7 @@ impl NixInstaller {
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("workdir has not been created"))?
             .path()
-            .join("installer");
+            .join("install");
 
         self.shell.write_file(installer_path, response.as_bytes())?;
         Ok(())
@@ -158,9 +161,8 @@ impl NixInstaller {
             .iter()
             .filter(|opt| !opt.is_empty())
             .cloned()
-            .collect::<Vec<_>>()
-            .join(" ");
-        cmd!(self.shell, "sh {installer} {options}").run()?;
+            .collect::<Vec<_>>();
+        cmd!(self.shell, "sh {installer} {options...}").run()?;
         Ok(())
     }
 
@@ -169,20 +171,20 @@ impl NixInstaller {
             let cert_file = "/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt";
             cmd!(
                 self.shell,
-                "echo \"NIX_SSL_CERT_FILE={cert_file}\" >> \"$BASH_ENV\""
+                "echo 'NIX_SSL_CERT_FILE={cert_file}' >> $BASH_ENV"
             )
             .run()?;
-            cmd!(self.shell, "export NIX_SSL_CERT_FILE={cert_file}").run()?;
+            // cmd!(self.shell, "export NIX_SSL_CERT_FILE={cert_file}").run()?;
             cmd!(
                 self.shell,
-                "sudo launchctl setenv NIX_SSL_CERT_FILE \"{cert_file}\""
+                "sudo launchctl setenv NIX_SSL_CERT_FILE {cert_file}"
             )
             .run()?;
         }
 
         cmd!(
             self.shell,
-            "export PATH=\"/nix/var/nix/profiles/per-user/$USER/profile/bin:/nix/var/nix/profiles/default/bin:$PATH\" >> \"BASH_ENV\""
+            "echo 'export PATH=/nix/var/nix/profiles/per-user/$USER/profile/bin:/nix/var/nix/profiles/default/bin:$PATH' >> $BASH_ENV"
         )
         .run()?;
 
@@ -192,7 +194,7 @@ impl NixInstaller {
             .unwrap_or_else(|_| "".to_string());
 
         if !custom_path.is_empty() {
-            cmd!(self.shell, "\"NIX_PATH={custom_path}\" >> \"$BASH_ENV\"").run()?;
+            cmd!(self.shell, "echo 'NIX_PATH={custom_path}' >> $BASH_ENV").run()?;
         }
 
         Ok(())
@@ -245,7 +247,7 @@ fn detect_os(sh: &Shell) -> Result<OperatingSystem, anyhow::Error> {
     let output = cmd!(sh, "uname").read()?;
 
     if output.contains("Linux") {
-        if cmd!(sh, "[ -e /run/systemd/system ]").quiet().run().is_ok() {
+        if cmd!(sh, "[ -e /run/systemd/system ]").run().is_ok() {
             return Ok(OperatingSystem::LinuxSystemD);
         }
         Ok(OperatingSystem::Linux)
