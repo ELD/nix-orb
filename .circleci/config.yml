@@ -11,7 +11,7 @@ executors:
       - image: cimg/base:stable
   linux-machine: &linux-machine
     machine:
-      image: ubuntu-2004:202111-02
+      image: ubuntu-2004:202101-01
   macos: &macos
     macos:
       xcode: 13.3.0

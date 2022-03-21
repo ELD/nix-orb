@@ -229,6 +229,7 @@ fn main() -> Result<(), anyhow::Error> {
     // Run the installer
     installer.run_installer()?;
 
+    // Set various environment variables
     installer.post_install_steps()?;
 
     Ok(())
