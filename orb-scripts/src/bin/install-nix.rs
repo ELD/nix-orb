@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use xshell::{cmd, Shell, TempDir};
 
 #[derive(Debug, PartialEq)]
@@ -169,14 +171,11 @@ impl NixInstaller {
     }
 
     pub fn post_install_steps(&self) -> Result<(), anyhow::Error> {
+        let mut bash_env_additions = vec![];
+
         if self.os == OperatingSystem::MacOS {
             let cert_file = "/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt";
-            cmd!(
-                self.shell,
-                "echo 'NIX_SSL_CERT_FILE={cert_file}' >> $BASH_ENV"
-            )
-            .run()?;
-            // cmd!(self.shell, "export NIX_SSL_CERT_FILE={cert_file}").run()?;
+            bash_env_additions.push(format!("export NIX_SSL_CERT_FILE={cert_file}"));
             cmd!(
                 self.shell,
                 "sudo launchctl setenv NIX_SSL_CERT_FILE {cert_file}"
@@ -186,11 +185,7 @@ impl NixInstaller {
 
         let user = self.shell.var("USER")?;
         let path = self.shell.var("PATH")?;
-        cmd!(
-            self.shell,
-            "echo export 'PATH=/nix/var/nix/profiles/per-user/'{user}'/profile/bin:/nix/var/nix/profiles/default/bin:'{path}'' >> $BASH_ENV"
-        )
-        .run()?;
+        bash_env_additions.push(format!("export PATH=/nix/var/nix/profiles/per-user/{user}/profile/bin:/nix/var/nix/profiles/default/bin:{path}"));
 
         let custom_path = self
             .shell
@@ -198,8 +193,15 @@ impl NixInstaller {
             .unwrap_or_else(|_| "".to_string());
 
         if !custom_path.is_empty() {
-            cmd!(self.shell, "echo 'NIX_PATH='{custom_path}'' >> $BASH_ENV").run()?;
+            bash_env_additions.push(format!("export NIX_PATH={custom_path}"));
         }
+
+        let path = self.shell.var("BASH_ENV")?;
+        append_file(
+            &self.shell,
+            &PathBuf::from(path),
+            bash_env_additions.join("\n"),
+        )?;
 
         Ok(())
     }
@@ -260,6 +262,14 @@ fn detect_os(sh: &Shell) -> Result<OperatingSystem, anyhow::Error> {
     } else {
         panic!("Unsupported OS: {}", output);
     }
+}
+
+fn append_file(sh: &Shell, path: &Path, contents: String) -> Result<(), anyhow::Error> {
+    let previous_contents = sh.read_file(path)?;
+    let new_contents = format!("{}\n{}", previous_contents, contents);
+
+    sh.write_file(path, new_contents.as_bytes())?;
+    Ok(())
 }
 
 #[cfg(test)]
