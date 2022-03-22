@@ -43,6 +43,7 @@ workflows:
           filters:
             tags:
               only: /.*/
+          requires: [build-scripts]
       - orb-tools/lint:
           filters:
             tags:
@@ -151,4 +152,5 @@ jobs:
       - run:
           name: "Release binaries to GitHub"
           command: |
+            go get -u github.com/tcnksm/ghr
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ./dist
