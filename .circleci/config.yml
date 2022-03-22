@@ -7,8 +7,13 @@ orbs:
 
 executors:
   linux: &linux
+    parameters:
+      image:
+        description: The image to use for the executor.
+        type: string
+        default: cimg/base:stable
     docker:
-      - image: cimg/base:stable
+      - image: << parameters.image >>
   linux-machine: &linux-machine
     machine:
       image: ubuntu-2004:202101-01
@@ -34,11 +39,10 @@ workflows:
             tags:
               only: /.*/
           requires: [test-scripts]
-      # - copy-scripts:
-      #     filters:
-      #       tags:
-      #         only: /.*/
-      #     requires: [build-scripts]
+      - release-binaries:
+          filters:
+            tags:
+              only: /.*/
       - orb-tools/lint:
           filters:
             tags:
@@ -57,7 +61,7 @@ workflows:
           orb-name: eld/nix
           requires:
             [
-              build-scripts,
+              release-binaries,
               orb-tools/lint,
               orb-tools/review,
               orb-tools/pack,
@@ -86,7 +90,6 @@ jobs:
       - rust/test:
           with_cache: false
 
-  # TODO: Create a script to install nix on Linux _and_ macOS; don't use the default Docker image
   build-scripts:
     parameters:
       os:
@@ -100,8 +103,8 @@ jobs:
       - when:
           condition:
             or:
-            - equal: [*linux, << parameters.os >>]
-            - equal: [*linux-machine, << parameters.os >>]
+            - equal: [linux, << parameters.os >>]
+            - equal: [linux-machine, << parameters.os >>]
           steps:
             - run:
                 name: "Add Linux musl target and required build tools"
@@ -112,14 +115,40 @@ jobs:
                 name: "Build for musl (static binary)"
                 command: cargo build --release --target=x86_64-unknown-linux-musl
             - run:
-                name: "Test Invocation"
+                name: "Copy built binary to workspace"
                 command: |
-                  target/x86_64-unknown-linux-musl/release/install-nix < /dev/null
+                  mkdir -p ~/dist/linux-musl
+                  cp target/x86_64-unknown-linux-musl/release/nix ~/dist/linux-musl/install-nix
+            - persist_to_workspace:
+                root: ~/dist
+                paths:
+                  - linux-musl
       - when:
           condition:
             or:
-            - equal: [*macos, << parameters.os >>]
+            - equal: [macos, << parameters.os >>]
           steps:
             - rust/build:
                 release: true
                 with_cache: false
+            - run:
+                name: "Copy built binary to workspace"
+                command: |
+                  mkdir -p ~/dist/darwin
+                  cp target/release/nix ~/dist/darwin/install-nix
+            - persist_to_workspace:
+                root: ~/dist
+                paths:
+                  - darwin
+
+  release-binaries:
+    executor:
+      name: linux
+      image: cimg/go:1.16
+    steps:
+      - attach_workspace:
+          at: ./dist
+      - run:
+          name: "Release binaries to GitHub"
+          command: |
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ./dist
