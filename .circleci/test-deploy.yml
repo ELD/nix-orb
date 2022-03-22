@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  cachix: eld/cachix@dev:<<pipeline.git.revision>>
+  cachix: eld/nix@dev:<<pipeline.git.revision>>
   orb-tools: circleci/orb-tools@11.1
 
 workflows:
@@ -18,10 +18,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - integration-test:
-          filters:
-            tags:
-              only: /.*/
       - orb-tools/publish:
           orb-name: eld/cachix
           requires:
@@ -36,13 +32,4 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
-
-jobs:
-  integration-test:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - checkout
-      - cachix/use:
-          caches: ELD
 

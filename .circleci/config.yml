@@ -43,6 +43,7 @@ workflows:
           filters:
             tags:
               only: /.*/
+          context: orb-publishing
           requires: [build-scripts]
       - orb-tools/lint:
           filters:
@@ -146,10 +147,17 @@ jobs:
       name: linux
       image: cimg/go:1.16
     steps:
+      - checkout
       - attach_workspace:
           at: ./dist
+      - run:
+          name: "Create a tag"
+          command: |
+            git push origin :refs/tags/binary-dev
+            git tag -f binary-dev
+            git push origin main --tags
       - run:
           name: "Release binaries to GitHub"
           command: |
             go get -u github.com/tcnksm/ghr
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_SHA1} ./dist
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} binary-dev ./dist
