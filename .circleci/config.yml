@@ -114,7 +114,7 @@ jobs:
             - run:
                 name: "Test Invocation"
                 command: |
-                  echo $TTY
+                  echo $(tty)
                   target/x86_64-unknown-linux-musl/release/install-nix
       - when:
           condition:
