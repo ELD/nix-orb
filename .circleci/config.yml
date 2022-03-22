@@ -31,7 +31,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-              ignore: /binary-dev/
+              ignore: binary-dev
       - build-scripts:
           matrix:
             parameters:
@@ -39,30 +39,30 @@ workflows:
           filters:
             tags:
               only: /.*/
-              ignore: /binary-dev/
+              ignore: binary-dev
           requires: [test-scripts]
       - release-binaries:
           filters:
             tags:
               only: /.*/
-              ignore: /binary-dev/
+              ignore: binary-dev
           context: orb-publishing
           requires: [build-scripts]
       - orb-tools/lint:
           filters:
             tags:
               only: /.*/
-              ignore: /binary-dev/
+              ignore: binary-dev
       - orb-tools/pack:
           filters:
             tags:
               only: /.*/
-              ignore: /binary-dev/
+              ignore: binary-dev
       - orb-tools/review:
           filters:
             tags:
               only: /.*/
-              ignore: /binary-dev/
+              ignore: binary-dev
       - shellcheck/check:
           exclude: SC2148,SC2038,SC2086,SC2002,SC2016
       - orb-tools/publish:
