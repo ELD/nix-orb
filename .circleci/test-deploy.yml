@@ -10,14 +10,17 @@ workflows:
           filters:
             tags:
               only: /.*/
+              ignore: /binary-dev/
       - orb-tools/pack:
           filters:
             tags:
               only: /.*/
+              ignore: /binary-dev/
       - orb-tools/review:
           filters:
             tags:
               only: /.*/
+              ignore: /binary-dev/
       - orb-tools/publish:
           orb-name: eld/cachix
           requires:
@@ -30,6 +33,7 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+              ignore: /binary-dev/
             branches:
               ignore: /.*/
 
