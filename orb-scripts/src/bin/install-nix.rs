@@ -33,7 +33,7 @@ impl NixInstaller {
 
     /// Check if nix is already installed; returns Err is it is
     pub fn nix_not_installed(&self) -> Result<(), anyhow::Error> {
-        if cmd!(self.shell, "type -p nix").run().is_ok() {
+        if cmd!(self.shell, "type -p nix").quiet().run().is_ok() {
             println!("Nix is already installed; skipping installation");
             return Err(anyhow::anyhow!(
                 "Nix is present on the system; skipping installation"
@@ -106,7 +106,9 @@ impl NixInstaller {
             }
             OperatingSystem::Linux => {
                 self.shell.create_dir("/etc/nix")?;
-                cmd!(self.shell, "cp {workdir}/nix.conf /etc/nix/nix.conf").run()?;
+                cmd!(self.shell, "cp {workdir}/nix.conf /etc/nix/nix.conf")
+                    .quiet()
+                    .run()?;
             }
         }
 
@@ -160,7 +162,9 @@ impl NixInstaller {
             .filter(|opt| !opt.is_empty())
             .cloned()
             .collect::<Vec<_>>();
-        cmd!(self.shell, "sh {installer} {options...}").run()?;
+        cmd!(self.shell, "sh {installer} {options...}")
+            .quiet()
+            .run()?;
         Ok(())
     }
 
@@ -184,7 +188,7 @@ impl NixInstaller {
         let path = self.shell.var("PATH")?;
         cmd!(
             self.shell,
-            "echo export PATH=/nix/var/nix/profiles/per-user/{user}/profile/bin:/nix/var/nix/profiles/default/bin:{path} >> $BASH_ENV"
+            "echo export 'PATH=/nix/var/nix/profiles/per-user/'{user}'/profile/bin:/nix/var/nix/profiles/default/bin:'{path}'' >> $BASH_ENV"
         )
         .run()?;
 
@@ -194,7 +198,7 @@ impl NixInstaller {
             .unwrap_or_else(|_| "".to_string());
 
         if !custom_path.is_empty() {
-            cmd!(self.shell, "echo 'NIX_PATH={custom_path}' >> $BASH_ENV").run()?;
+            cmd!(self.shell, "echo 'NIX_PATH='{custom_path}'' >> $BASH_ENV").run()?;
         }
 
         Ok(())
