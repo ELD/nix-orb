@@ -10,30 +10,66 @@ workflows:
           filters:
             tags:
               only: /.*/
-              ignore: binary-dev
       - orb-tools/pack:
           filters:
             tags:
               only: /.*/
-              ignore: binary-dev
       - orb-tools/review:
           filters:
             tags:
               only: /.*/
-              ignore: binary-dev
-      - orb-tools/publish:
-          orb-name: eld/cachix
+      - upload-release-binaries:
           requires:
             - orb-tools/lint
             - orb-tools/review
             - orb-tools/pack
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+          context: orb-publishing
+      - orb-tools/publish:
+          orb-name: eld/cachix
+          requires:
+            - upload-release-binaries
           context: orb-publishing
           vcs-type: << pipeline.project.type >>
           pub-type: production
           filters:
             tags:
               only: /^v.*/
-              ignore: binary-dev
             branches:
               ignore: /.*/
+
+jobs:
+  test-nix-install:
+    parameters:
+      executor:
+        description: "Which executor to run on"
+        type: executor
+        default: linux
+    executor: << parameters.executor >>
+    steps:
+      - checkout
+      - nix/install
+      - run:
+          name: "Test nix install"
+          command: |
+            nix-env -iA cachix -f https://cachix.org/api/v1/install
+
+  upload-release-binaries:
+    executor:
+      name: linux
+      image: cimg/go:1.16
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./dist
+      - run:
+          name: "Release binaries to GitHub"
+          command: |
+            ls -al
+            go get -u github.com/tcnksm/ghr
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace -delete -prerelease ${CIRCLE_TAG} ./dist
 

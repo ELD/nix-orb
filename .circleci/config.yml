@@ -31,7 +31,6 @@ workflows:
           filters:
             tags:
               only: /.*/
-              ignore: binary-dev
       - build-scripts:
           matrix:
             parameters:
@@ -39,50 +38,45 @@ workflows:
           filters:
             tags:
               only: /.*/
-              ignore: binary-dev
           requires: [test-scripts]
-      - release-binaries:
+      - upload-dev-binaries:
           filters:
             tags:
               only: /.*/
-              ignore: binary-dev
           context: orb-publishing
           requires: [build-scripts]
       - orb-tools/lint:
           filters:
             tags:
               only: /.*/
-              ignore: binary-dev
       - orb-tools/pack:
           filters:
             tags:
               only: /.*/
-              ignore: binary-dev
       - orb-tools/review:
           filters:
             tags:
               only: /.*/
-              ignore: binary-dev
       - shellcheck/check:
           exclude: SC2148,SC2038,SC2086,SC2002,SC2016
-      - orb-tools/publish:
-          orb-name: eld/nix
-          requires:
-            [
-              release-binaries,
-              orb-tools/lint,
-              orb-tools/review,
-              orb-tools/pack,
-              shellcheck/check,
-            ]
-          vcs-type: << pipeline.project.type >>
-          # Use a context to hold your publishing token.
-          context: orb-publishing
+      # - orb-tools/publish:
+      #     orb-name: eld/nix
+      #     requires:
+      #       [
+      #         release-binaries,
+      #         orb-tools/lint,
+      #         orb-tools/review,
+      #         orb-tools/pack,
+      #         shellcheck/check,
+      #       ]
+      #     vcs-type: << pipeline.project.type >>
+      #     # Use a context to hold your publishing token.
+      #     context: orb-publishing
       # Triggers the next workflow in the Orb Development Kit.
-      - orb-tools/continue:
-          pipeline-number: << pipeline.number >>
-          vcs-type: << pipeline.project.type >>
-          requires: [orb-tools/publish]
+      # - orb-tools/continue:
+      #     pipeline-number: << pipeline.number >>
+      #     vcs-type: << pipeline.project.type >>
+      #     requires: [orb-tools/publish]
 
 jobs:
   test-scripts:
@@ -124,8 +118,8 @@ jobs:
             - run:
                 name: "Copy built binary to workspace"
                 command: |
-                  mkdir -p ~/dist/linux-musl
-                  cp target/x86_64-unknown-linux-musl/release/install-nix ~/dist/linux-musl/install-nix
+                  mkdir -p ~/dist
+                  cp target/x86_64-unknown-linux-musl/release/install-nix ~/dist/install-nix-x86_64-linux-unknown-musl
             - persist_to_workspace:
                 root: ~/dist
                 paths:
@@ -141,14 +135,19 @@ jobs:
             - run:
                 name: "Copy built binary to workspace"
                 command: |
-                  mkdir -p ~/dist/darwin
-                  cp target/release/install-nix ~/dist/darwin/install-nix
+                  mkdir -p ~/dist
+                  cp target/release/install-nix ~/dist/install-nix-x86_64-darwin
             - persist_to_workspace:
                 root: ~/dist
                 paths:
                   - darwin
 
-  release-binaries:
+  upload-dev-binaries:
+    parameters:
+      dev-tag:
+        description: "The git tag to upload dev binaries to"
+        type: string
+        default: binary-dev
     executor:
       name: linux
       image: cimg/go:1.16
@@ -157,14 +156,10 @@ jobs:
       - attach_workspace:
           at: ./dist
       - run:
-          name: "Create a tag"
-          command: |
-            git push origin :refs/tags/binary-dev
-            git tag -f binary-dev
-            git push origin main --tags
-      - run:
           name: "Release binaries to GitHub"
+          environment:
+            DEV_TAG_NAME: << parameters.dev-tag >>
           command: |
             ls -al
             go get -u github.com/tcnksm/ghr
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace -prerelease binary-dev ./dist
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace -delete -prerelease ${DEV_TAG_NAME} ./dist
