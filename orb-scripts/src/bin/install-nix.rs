@@ -184,7 +184,7 @@ impl NixInstaller {
         let path = self.shell.var("PATH")?;
         cmd!(
             self.shell,
-            "echo 'export PATH=/nix/var/nix/profiles/per-user/{user}/profile/bin:/nix/var/nix/profiles/default/bin:{path}' >> $BASH_ENV"
+            "echo export PATH=/nix/var/nix/profiles/per-user/{user}/profile/bin:/nix/var/nix/profiles/default/bin:{path} >> $BASH_ENV"
         )
         .run()?;
 
