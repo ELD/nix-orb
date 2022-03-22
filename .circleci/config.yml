@@ -115,7 +115,7 @@ jobs:
                 name: "Test Invocation"
                 command: |
                   echo $(tty)
-                  target/x86_64-unknown-linux-musl/release/install-nix
+                  IS_HEADLESS=yes target/x86_64-unknown-linux-musl/release/install-nix
       - when:
           condition:
             or:
