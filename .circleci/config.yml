@@ -104,8 +104,7 @@ jobs:
       - when:
           condition:
             or:
-            - equal: [linux, << parameters.os >>]
-            - equal: [linux-machine, << parameters.os >>]
+            - equal: [*linux-machine, << parameters.os >>]
           steps:
             - run:
                 name: "Add Linux musl target and required build tools"
@@ -127,7 +126,7 @@ jobs:
       - when:
           condition:
             or:
-            - equal: [macos, << parameters.os >>]
+            - equal: [*macos, << parameters.os >>]
           steps:
             - rust/build:
                 release: true
