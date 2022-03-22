@@ -1,5 +1,6 @@
 InstallNix() {
-    local os=$(uname)
+    local os
+    os=$(uname)
 
     if [[ $os = "Darwin" ]]; then
         ./darwin/install-nix < /dev/null
