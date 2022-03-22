@@ -1,9 +1,9 @@
 InstallNix() {
     local os=$(uname)
 
-    if [[ os = "Darwin" ]]; then
+    if [[ $os = "Darwin" ]]; then
         ./darwin/install-nix < /dev/null
-    elif [[ os = "Linux" ]]; then
+    elif [[ $os = "Linux" ]]; then
         ./linux/install-nix < /dev/null
     else
         echo "Unsupported operating system"
