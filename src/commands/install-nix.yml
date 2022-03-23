@@ -11,8 +11,8 @@ parameters:
     default: ""
     description: "The URL to download the Nix installer script from"
   install_options:
-    type: array
-    default: []
+    type: string
+    default: ""
     description: "Additional options to pass to the installer script"
   nix_path:
     type: string
