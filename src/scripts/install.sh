@@ -46,6 +46,7 @@ InstallNix() {
         fi
     done
 
+    chmod +x "$HOME"/.bin/nix-orb/install-nix
     # Close stdin so the installer runs non-interactively
     "$HOME"/.bin/nix-orb/install-nix < /dev/null
 
