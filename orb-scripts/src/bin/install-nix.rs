@@ -135,7 +135,15 @@ impl NixInstaller {
         let installer_url = self
             .shell
             .var("INPUT_INSTALL_URL")
-            .unwrap_or_else(|_| "https://nixos.org/nix/install".to_string());
+            .ok()
+            .map(|url| {
+                if url.is_empty() {
+                    "https://nixos.org/nix/install".to_string()
+                } else {
+                    url
+                }
+            })
+            .unwrap_or_else(|| "https://nixos.org/nix/install".to_string());
 
         let response = reqwest::blocking::get(installer_url)?.text()?;
 
@@ -183,7 +191,10 @@ impl NixInstaller {
             .run()?;
         }
 
-        let user = self.shell.var("USER")?;
+        let user = self
+            .shell
+            .var("USER")
+            .unwrap_or_else(|_| "circleci".to_string());
         let path = self.shell.var("PATH")?;
         bash_env_additions.push(format!("export PATH=/nix/var/nix/profiles/per-user/{user}/profile/bin:/nix/var/nix/profiles/default/bin:{path}"));
 
