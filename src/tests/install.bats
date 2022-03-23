@@ -1,7 +1,7 @@
 setup() {
     load 'libs/bats-support/load'
     load 'libs/bats-assert/load'
-    source ./src/scripts/install-nix.sh
+    source ./src/scripts/install.sh
 }
 
 @test '1: Runs on Linux' {
