@@ -55,7 +55,7 @@ impl NixInstaller {
     pub fn write_config(&self) -> Result<(), anyhow::Error> {
         let extra_nix_config = self
             .shell
-            .var("EXTRA_NIX_CONFIG")
+            .var("INPUT_EXTRA_NIX_CONFIG")
             .unwrap_or_else(|_| "".to_string());
         let user = self.shell.var("USER")?;
         let trusted_user = format!("trusted-users = root {user}");

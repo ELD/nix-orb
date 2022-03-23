@@ -18,6 +18,10 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - test-nix-install:
+          filters:
+            tags:
+              only: /.*/
       - upload-release-binaries:
           requires:
             - orb-tools/lint
@@ -30,7 +34,7 @@ workflows:
               ignore: /.*/
           context: orb-publishing
       - orb-tools/publish:
-          orb-name: eld/cachix
+          orb-name: eld/nix
           requires:
             - upload-release-binaries
           context: orb-publishing
@@ -52,7 +56,8 @@ jobs:
     executor: << parameters.executor >>
     steps:
       - checkout
-      - nix/install
+      - nix/install:
+          binary_tag: binary-dev
       - run:
           name: "Test nix install"
           command: |

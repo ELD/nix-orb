@@ -1,15 +1,46 @@
+CheckPreconditions() {
+    if ! command -v curl; then
+        echo "curl is required to use this command"
+        exit 1
+    fi
+}
+
 InstallNix() {
     local os
-    os=$(uname)
+    local download_url
+    local target_triple
+    local tag_name
 
+    if ! CheckPreconditions; then
+        echo "Preconditions checking failed... exiting"
+        exit 1
+    fi
+
+    os=${BATS_TEST_OS:-$(uname)}
     if [[ $os = "Darwin" ]]; then
-        ./darwin/install-nix < /dev/null
+        target_triple="x86_64-apple-darwin"
     elif [[ $os = "Linux" ]]; then
-        ./linux/install-nix < /dev/null
+        target_triple="x86_64-linux-unknown-musl"
     else
         echo "Unsupported operating system"
         exit 1
     fi
+
+    tag_name="${BATS_TAG_NAME:-${TAG_NAME}}"
+    echo $tag_name
+    download_url="https://github.com/ELD/nix-orb/releases/download/${tag_name}/install-nix-${target_triple}"
+    mkdir -p "${HOME}/.bin/nix-orb"
+    curl -o "${HOME}/.bin/nix-orb/install-nix" -L --fail --retries 5 ${download_url} > /dev/null
+
+    if [[ "${BATS_TEST}" == "true" ]];
+        echo "Would run install-nix on ${os}"
+        exit 0
+    fi
+
+    # Close stdin so the installer runs non-interactively
+    $HOME/.bin/nix-orb/install-nix < /dev/null
+
+    . $BASH_ENV
 }
 
 ORB_TEST_ENV="bats-core"

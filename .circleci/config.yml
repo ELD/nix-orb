@@ -3,6 +3,7 @@ setup: true
 orbs:
   orb-tools: circleci/orb-tools@11.1.2
   shellcheck: circleci/shellcheck@3.1
+  bats: circleci/bats@1.0
   rust: circleci/rust@1.6.0
 
 executors:
@@ -22,7 +23,7 @@ executors:
       xcode: 13.3.0
 
 workflows:
-  lint-pack:
+  test-pack:
     jobs:
       - test-scripts:
           matrix:
@@ -59,24 +60,31 @@ workflows:
               only: /.*/
       - shellcheck/check:
           exclude: SC2148,SC2038,SC2086,SC2002,SC2016
-      # - orb-tools/publish:
-      #     orb-name: eld/nix
-      #     requires:
-      #       [
-      #         release-binaries,
-      #         orb-tools/lint,
-      #         orb-tools/review,
-      #         orb-tools/pack,
-      #         shellcheck/check,
-      #       ]
-      #     vcs-type: << pipeline.project.type >>
-      #     # Use a context to hold your publishing token.
-      #     context: orb-publishing
+      - bats/run:
+          path: ./src/tests
+          requires:
+            - upload-dev-binaries
+          filters:
+            tags:
+              only: /.*/
+      - orb-tools/publish:
+          orb-name: eld/nix
+          requires:
+            [
+              bats/run,
+              orb-tools/lint,
+              orb-tools/review,
+              orb-tools/pack,
+              shellcheck/check,
+            ]
+          vcs-type: << pipeline.project.type >>
+          # Use a context to hold your publishing token.
+          context: orb-publishing
       # Triggers the next workflow in the Orb Development Kit.
-      # - orb-tools/continue:
-      #     pipeline-number: << pipeline.number >>
-      #     vcs-type: << pipeline.project.type >>
-      #     requires: [orb-tools/publish]
+      - orb-tools/continue:
+          pipeline-number: << pipeline.number >>
+          vcs-type: << pipeline.project.type >>
+          requires: [orb-tools/publish]
 
 jobs:
   test-scripts:
