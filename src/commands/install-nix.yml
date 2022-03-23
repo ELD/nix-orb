@@ -31,5 +31,5 @@ steps:
         INPUT_INSTALL_OPTIONS: << parameters.install_options >>
         INPUT_NIX_PATH: << parameters.nix_path >>
         TAG_NAME: << parameters.bianry_tag >>
-    name: Install Nix
-    command: << include(scripts/install-nix.sh) >>
+      name: Install Nix
+      command: << include(scripts/install-nix.sh) >>

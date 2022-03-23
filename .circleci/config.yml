@@ -25,7 +25,26 @@ executors:
 workflows:
   test-pack:
     jobs:
+      - orb-tools/lint:
+          filters:
+            tags:
+              only: /.*/
+      - orb-tools/pack:
+          filters:
+            tags:
+              only: /.*/
+      - orb-tools/review:
+          filters:
+            tags:
+              only: /.*/
+      - shellcheck/check:
+          exclude: SC2148,SC2038,SC2086,SC2002,SC2016
       - test-scripts:
+          requires:
+            - orb-tools/lint
+            - orb-tools/pack
+            - orb-tools/review
+            - shellcheck/check
           matrix:
             parameters:
               os: [linux-machine, macos]
@@ -46,20 +65,6 @@ workflows:
               only: /.*/
           context: orb-publishing
           requires: [build-scripts]
-      - orb-tools/lint:
-          filters:
-            tags:
-              only: /.*/
-      - orb-tools/pack:
-          filters:
-            tags:
-              only: /.*/
-      - orb-tools/review:
-          filters:
-            tags:
-              only: /.*/
-      - shellcheck/check:
-          exclude: SC2148,SC2038,SC2086,SC2002,SC2016
       - bats/run:
           path: ./src/tests
           requires:
@@ -71,11 +76,7 @@ workflows:
           orb-name: eld/nix
           requires:
             [
-              bats/run,
-              orb-tools/lint,
-              orb-tools/review,
-              orb-tools/pack,
-              shellcheck/check,
+              bats/run
             ]
           vcs-type: << pipeline.project.type >>
           # Use a context to hold your publishing token.

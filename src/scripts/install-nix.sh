@@ -32,7 +32,7 @@ InstallNix() {
     mkdir -p "${HOME}/.bin/nix-orb"
     curl -o "${HOME}/.bin/nix-orb/install-nix" -L --fail --retries 5 ${download_url} > /dev/null
 
-    if [[ "${BATS_TEST}" == "true" ]];
+    if [[ "${BATS_TEST}" == "true" ]]; then
         echo "Would run install-nix on ${os}"
         exit 0
     fi
