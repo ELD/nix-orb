@@ -6,7 +6,7 @@ setup() {
     export BATS_TEST=true
     export BATS_TEST_OS=Linux
     export BATS_TAG_NAME=binary-dev
-    result=$(install-nix)
+    result=$(InstallNix)
     [ "$result" == "Would run install-nix on Linux" ]
 }
 
@@ -14,13 +14,13 @@ setup() {
     export BATS_TEST=true
     export BATS_TEST_OS=Darwin
     export BATS_TAG_NAME=binary-dev
-    result=$(install-nix)
+    result=$(InstallNix)
     [ "$result" == "Would run install-nix on Darwin" ]
 }
 
 @test '3: Errors if OS is not recognized' {
     export BATS_TEST=true
     export BATS_TEST_OS=Unknown
-    result=$(install-nix)
+    result=$(InstallNix)
     [ "$result" == "Unsupported operating system" ]
 }
