@@ -3,6 +3,22 @@ orbs:
   cachix: eld/nix@dev:<<pipeline.git.revision>>
   orb-tools: circleci/orb-tools@11.1
 
+executors:
+  linux:
+    parameters:
+      image:
+        description: The image to use for the executor.
+        type: string
+        default: cimg/base:stable
+    docker:
+      - image: << parameters.image >>
+  linux-machine:
+    machine:
+      image: ubuntu-2004:202101-01
+  macos:
+    macos:
+      xcode: 13.3.0
+
 workflows:
   test-deploy:
     jobs:
@@ -19,11 +35,15 @@ workflows:
             tags:
               only: /.*/
       - test-nix-install:
+          matrix:
+            parameters:
+              os: [linux, linux-machine, macos]
           filters:
             tags:
               only: /.*/
       - upload-release-binaries:
           requires:
+            - test-nix-install
             - orb-tools/lint
             - orb-tools/review
             - orb-tools/pack
@@ -49,11 +69,11 @@ workflows:
 jobs:
   test-nix-install:
     parameters:
-      executor:
+      os:
         description: "Which executor to run on"
         type: executor
-        default: linux
-    executor: << parameters.executor >>
+        default: linux-machine
+    executor: << parameters.os >>
     steps:
       - checkout
       - nix/install:

@@ -15,7 +15,7 @@ executors:
         default: cimg/base:stable
     docker:
       - image: << parameters.image >>
-  linux-machine: &linux-machine
+  linux-machine:
     machine:
       image: ubuntu-2004:202101-01
   macos: &macos
