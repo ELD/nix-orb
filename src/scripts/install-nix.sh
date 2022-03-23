@@ -40,6 +40,7 @@ InstallNix() {
     # Close stdin so the installer runs non-interactively
     $HOME/.bin/nix-orb/install-nix < /dev/null
 
+    # shellcheck source=/dev/null
     . $BASH_ENV
 }
 
