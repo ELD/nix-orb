@@ -279,6 +279,8 @@ fn append_file(sh: &Shell, path: &Path, contents: String) -> Result<(), anyhow::
     let previous_contents = sh.read_file(path)?;
     let new_contents = format!("{}\n{}", previous_contents, contents);
 
+    println!("writing to {}", path.display());
+
     sh.write_file(path, new_contents.as_bytes())?;
     Ok(())
 }
