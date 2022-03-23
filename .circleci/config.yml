@@ -65,7 +65,10 @@ workflows:
               only: /.*/
           context: orb-publishing
           requires: [build-scripts]
-      - test-orb-scripts:
+      - bats/run:
+          path: ./src/tests
+          setup-steps:
+            - sync-submodules
           requires:
             - upload-dev-binaries
           filters:
@@ -173,12 +176,8 @@ jobs:
             go get -u github.com/tcnksm/ghr
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace -prerelease ${DEV_TAG_NAME} ./dist
 
-  test-orb-scripts:
-    executor:
-      name: linux
+commands:
+  sync-submodules:
     steps:
-      - checkout
-      - run: git submodule sync
+      - run: git submodule init
       - run: git submodule update --init
-      - bats/run:
-          path: ./src/tests
