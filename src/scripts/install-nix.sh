@@ -1,5 +1,5 @@
 CheckPreconditions() {
-    if ! command -v curl; then
+    if ! command -v curl >& /dev/null; then
         echo "curl is required to use this command"
         exit 1
     fi
@@ -30,9 +30,14 @@ InstallNix() {
     download_url="https://github.com/ELD/nix-orb/releases/download/${tag_name}/install-nix-${target_triple}"
     mkdir -p "${HOME}/.bin/nix-orb"
 
+    if [[ "${BATS_TEST}" == "true" ]]; then
+        echo "Would run install-nix on ${os}"
+        exit 0
+    fi
+
     local curl_retries
     curl_retries=5
-    while ! curl -o "${HOME}/.bin/nix-orb/install-nix" -L --fail "${download_url}" > /dev/null; do
+    while ! curl -o "${HOME}/.bin/nix-orb/install-nix" -L --fail "${download_url}" >& /dev/null; do
         sleep 1
         ((curl_retries--))
         if [[ $curl_retries -le 0 ]]; then
@@ -40,11 +45,6 @@ InstallNix() {
             exit 1
         fi
     done
-
-    if [[ "${BATS_TEST}" == "true" ]]; then
-        echo "Would run install-nix on ${os}"
-        exit 0
-    fi
 
     # Close stdin so the installer runs non-interactively
     "$HOME"/.bin/nix-orb/install-nix < /dev/null
