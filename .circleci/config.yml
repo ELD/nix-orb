@@ -123,7 +123,7 @@ jobs:
             - persist_to_workspace:
                 root: ~/dist
                 paths:
-                  - linux-musl
+                  - install-nix-x86_64-linux-unknown-musl
       - when:
           condition:
             or:
@@ -136,11 +136,11 @@ jobs:
                 name: "Copy built binary to workspace"
                 command: |
                   mkdir -p ~/dist
-                  cp target/release/install-nix ~/dist/install-nix-x86_64-darwin
+                  cp target/release/install-nix ~/dist/install-nix-x86_64-apple-darwin
             - persist_to_workspace:
                 root: ~/dist
                 paths:
-                  - darwin
+                  - install-nix-x86_64-apple-darwin
 
   upload-dev-binaries:
     parameters:
