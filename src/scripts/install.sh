@@ -1,4 +1,9 @@
 CheckPreconditions() {
+    # Skip if BATS test
+    if [[ "${BATS_TEST}" == "true" ]]; then
+        return
+    fi
+
     if ! command -v curl >& /dev/null; then
         echo "curl is required to use this command"
         exit 1
