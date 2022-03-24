@@ -9,10 +9,12 @@ CheckPreconditions() {
         exit 1
     fi
 
-    if [[ -e /proc/1/cgroup && $(cat /proc/1/cgroup | grep -q docker) ]]; then
-        echo "Installing into a Docker container is not supported!"
-        echo "Please use the provided Nix executor if you want to use Docker"
-        exit 1
+    if [[ $(uname) == "Linux" ]]; then
+        if grep -q docker < /proc/1/cgroup; then
+            echo "Installing into a Docker container is not supported!"
+            echo "Please use the provided Nix executor if you want to use Docker"
+            exit 1
+        fi
     fi
 }
 
