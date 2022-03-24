@@ -1,5 +1,3 @@
-set -x
-
 CheckPreconditions() {
     if ! command -v curl >& /dev/null; then
         echo "curl is required to use this command"
