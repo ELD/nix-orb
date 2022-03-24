@@ -270,12 +270,16 @@ fn detect_os(sh: &Shell) -> Result<OperatingSystem, anyhow::Error> {
 }
 
 fn append_file(sh: &Shell, path: &Path, contents: String) -> Result<(), anyhow::Error> {
-    let previous_contents = sh.read_file(path)?;
-    let new_contents = format!("{}\n{}", previous_contents, contents);
+    let mut to_write = vec![];
+    let previous_contents = sh.read_file(path).unwrap_or_else(|_| "".to_string());
+    if !previous_contents.is_empty() {
+        to_write.push(previous_contents);
+    }
+    to_write.push(contents);
 
     println!("writing to {}", path.display());
 
-    sh.write_file(path, new_contents.as_bytes())?;
+    sh.write_file(path, to_write.join("\n").as_bytes())?;
     Ok(())
 }
 

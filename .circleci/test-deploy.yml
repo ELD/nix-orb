@@ -37,7 +37,7 @@ workflows:
       - test-nix-install:
           matrix:
             parameters:
-              os: [linux, linux-machine, macos]
+              os: [linux-machine, macos]
           filters:
             tags:
               only: /.*/
