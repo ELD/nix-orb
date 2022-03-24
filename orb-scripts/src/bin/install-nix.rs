@@ -18,6 +18,7 @@ struct NixInstaller {
     workdir: Option<TempDir>,
     os: OperatingSystem,
     installer_options: Vec<String>,
+    user: String,
 }
 
 impl NixInstaller {
@@ -25,17 +26,19 @@ impl NixInstaller {
     pub fn new() -> Result<Self, anyhow::Error> {
         let shell = Shell::new()?;
         let os = detect_os(&shell)?;
+        let user = shell.var("USER").unwrap_or_else(|_| "circleci".to_string());
         Ok(NixInstaller {
             shell,
             workdir: None,
             os,
             installer_options: vec![],
+            user,
         })
     }
 
     /// Check if nix is already installed; returns Err is it is
     pub fn nix_not_installed(&self) -> Result<(), anyhow::Error> {
-        if cmd!(self.shell, "type -p nix").quiet().run().is_ok() {
+        if cmd!(self.shell, "type -p nix").run().is_ok() {
             println!("Nix is already installed; skipping installation");
             return Err(anyhow::anyhow!(
                 "Nix is present on the system; skipping installation"
@@ -57,8 +60,7 @@ impl NixInstaller {
             .shell
             .var("INPUT_EXTRA_NIX_CONFIG")
             .unwrap_or_else(|_| "".to_string());
-        let user = self.shell.var("USER")?;
-        let trusted_user = format!("trusted-users = root {user}");
+        let trusted_user = format!("trusted-users = root {}", self.user);
         let mut config = vec!["max-jobs = auto", &trusted_user, &extra_nix_config];
 
         if !extra_nix_config.contains("experimental-features") {
@@ -108,9 +110,7 @@ impl NixInstaller {
             }
             OperatingSystem::Linux => {
                 self.shell.create_dir("/etc/nix")?;
-                cmd!(self.shell, "cp {workdir}/nix.conf /etc/nix/nix.conf")
-                    .quiet()
-                    .run()?;
+                cmd!(self.shell, "cp {workdir}/nix.conf /etc/nix/nix.conf").run()?;
             }
         }
 
@@ -172,9 +172,7 @@ impl NixInstaller {
             .filter(|opt| !opt.is_empty())
             .cloned()
             .collect::<Vec<_>>();
-        cmd!(self.shell, "sh {installer} {options...}")
-            .quiet()
-            .run()?;
+        cmd!(self.shell, "sh {installer} {options...}").run()?;
         Ok(())
     }
 
@@ -191,12 +189,8 @@ impl NixInstaller {
             .run()?;
         }
 
-        let user = self
-            .shell
-            .var("USER")
-            .unwrap_or_else(|_| "circleci".to_string());
         let path = self.shell.var("PATH")?;
-        bash_env_additions.push(format!("export PATH=/nix/var/nix/profiles/per-user/{user}/profile/bin:/nix/var/nix/profiles/default/bin:{path}"));
+        bash_env_additions.push(format!("export PATH=/nix/var/nix/profiles/per-user/{}/profile/bin:/nix/var/nix/profiles/default/bin:{path}", self.user));
 
         let custom_path = self
             .shell
