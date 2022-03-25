@@ -1,13 +1,18 @@
 description: >
-  Sample example description.
-# Provide a use-case based example for using this orb.
-# Everything in the `usage` section will be displayed in the orb registry.
-# Comments are not retained.
+  Example of using the Nix orb to install Nix on a Linux or macOS executor
+
 usage:
   version: 2.1
   orbs:
-    <orb-name>: <namespace>/<orb-name>@1.2.3
-  workflows:
+    nix: eld/nix@1.0.0
+  worflows:
     use-my-orb:
       jobs:
-        - <orb-name>/<job-name>
+        - install-nix
+
+  jobs:
+    install-nix:
+      machine:
+        image: ubuntu-2004:202111-02
+      steps:
+        - nix/install
