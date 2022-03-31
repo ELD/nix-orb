@@ -5,6 +5,7 @@ setup() {
 }
 
 @test '1: Creates and writes nix config' {
+    export BATS_TEST=true
     run Setup
     assert_success
     assert [ -e "$HOME"/config/nix.conf ]
