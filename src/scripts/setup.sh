@@ -4,7 +4,7 @@ Setup() {
     mkdir -p "$HOME"/.config/nix
     echo "sandbox = false" >> "$HOME"/.config/nix
 
-    add_command="nix-channel --add https://nixos.org/channels/"$NIX_CHANNEL" nixpkgs"
+    add_command="nix-channel --add https://nixos.org/channels/$NIX_CHANNEL nixpkgs"
     update_command="nix-channel --update"
 
     if [[ "$BATS_TEST" == "true" ]]; then
@@ -13,8 +13,8 @@ Setup() {
         exit 0
     fi
 
-    $("$add_command")
-    $("$update_command")
+    eval "$add_command"
+    eval "$update_command"
 }
 
 ORB_TEST_ENV="bats-core"
