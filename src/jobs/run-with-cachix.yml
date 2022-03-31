@@ -31,7 +31,7 @@ parameters:
     type: string
     default: nixpkgs-unstable
 steps:
-  - run: << parameters.before-setup >>
+  - << parameters.before-setup >>
   - run:
       name: Setup Nix
       command: << include(scripts/setup.sh) >>
@@ -41,4 +41,4 @@ steps:
       name: Install Cachix
       command: |
         nix-env -iA cachix -f https://cachix.org/api/v1/install
-  - steps: << parameters.after-cachix >>
+  - << parameters.after-cachix >>
