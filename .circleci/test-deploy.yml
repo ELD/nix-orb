@@ -22,15 +22,7 @@ executors:
 workflows:
   test-deploy:
     jobs:
-      - orb-tools/lint:
-          filters:
-            tags:
-              only: /.*/
       - orb-tools/pack:
-          filters:
-            tags:
-              only: /.*/
-      - orb-tools/review:
           filters:
             tags:
               only: /.*/
@@ -41,7 +33,7 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - nix/run-with-nix-cachix:
+      - nix/run-with-cachix:
           after-cachix:
             - run:
                 name: Clone flake
@@ -56,8 +48,6 @@ workflows:
           requires:
             - nix/run-with-nix-cachix
             - test-nix-install
-            - orb-tools/lint
-            - orb-tools/review
             - orb-tools/pack
           filters:
             tags:

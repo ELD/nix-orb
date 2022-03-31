@@ -1,0 +1,44 @@
+description: >
+  This job allows for arbitrary steps to be executed in an environment where
+  Cachix is installed.
+
+  If this job is run in a Docker executor using the official nixpkgs/nix
+  Docker image (the default executor for this orb), a setup script will run
+  to add the specified nixpkgs channel for use.
+
+  If this job is run on a machine or macOS executor, the `before-setup` parameter should be
+  used to invoke the `nix/install` command. Consequently, the setup script will not
+  run as it's unnecessary on a machine or macOS instance.
+executor: << parameters.executor >>
+parameters:
+  before-setup:
+    description: "Steps that will be executed before the setup script attempts to run"
+    type: steps
+    default: []
+  after-cachix:
+    description: "Steps that will be executed after Cachix has been installed"
+    type: steps
+    default: []
+  executor:
+    description: "The executor to run this job on"
+    type: executor
+    default: default
+  nix-channel:
+    description: |
+      The Nix channel to install inside the Docker container.
+
+      Defaults to "nixpkgs-unstable"
+    type: string
+    default: nixpkgs-unstable
+steps:
+  - run: << parameters.before-setup >>
+  - run:
+      name: Setup Nix
+      command: << include(scripts/setup.sh) >>
+      environment:
+        NIX_CHANNEL: << parameters.nix-channel >>
+  - run:
+      name: Install Cachix
+      command: |
+        nix-env -iA cachix -f https://cachix.org/api/v1/install
+  - steps: << parameters.after-cachix >>
