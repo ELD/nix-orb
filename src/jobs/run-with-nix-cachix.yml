@@ -1,0 +1,16 @@
+description: >
+  This job allows for arbitrary steps to be executed in an environment where
+  both Nix and Cachix are installed
+executor: default
+parameters:
+  after-cachix:
+    description: "Steps that will be executed after Cachix has been installed"
+    type: steps
+    default: []
+steps:
+  - install
+  - run:
+      name: Install Cachix
+      command: |
+        nix-env -iA cachix -f https://cachix.org/api/v1/install
+  - steps: << parameters.after-cachix >>

@@ -41,6 +41,17 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - test-run-with-nix-cachix:
+          after-cachix:
+            - run:
+                name: Clone flake
+                command: git clone git@github.com:ELD/nix-system.git
+            - run:
+                name: Check flake
+                command: nix flake check -v --show-trace
+          filters:
+            tags:
+              only: /.*/
       - upload-release-binaries:
           requires:
             - test-nix-install
@@ -97,4 +108,3 @@ jobs:
             ls -al
             go get -u github.com/tcnksm/ghr
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace -delete -prerelease ${CIRCLE_TAG} ./dist
-
