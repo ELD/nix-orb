@@ -1,8 +1,8 @@
 RunningInDocker() {
     if grep -q docker < /proc/1/cgroup; then
-        return true
+        return 1
     else
-        return false
+        return 0
     fi
 }
 
