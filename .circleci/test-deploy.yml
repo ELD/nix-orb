@@ -46,7 +46,7 @@ workflows:
               only: /.*/
       - upload-release-binaries:
           requires:
-            - nix/run-with-nix-cachix
+            - nix/run-with-cachix
             - test-nix-install
             - orb-tools/pack
           filters:
