@@ -2,7 +2,7 @@ Setup() {
     local add_command
     local update_command
     mkdir -p "$HOME"/.config/nix
-    echo "sandbox = false" >> "$HOME"/.config/nix
+    echo "sandbox = false" >> "$HOME"/.config/nix/nix.conf
 
     add_command="nix-channel --add https://nixos.org/channels/$NIX_CHANNEL nixpkgs"
     update_command="nix-channel --update"
