@@ -8,7 +8,7 @@ setup() {
     export BATS_TEST=true
     run Setup
     assert_success
-    assert [ -e /etc/nix/nix.conf ]
+    assert [ -e "$HOME"/.config/nix/nix.conf ]
 }
 
 @test '2: Creates the nix-channel add command' {

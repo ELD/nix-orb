@@ -23,10 +23,10 @@ Setup() {
     fi
 
     if ! ConfigExists; then
-        mkdir -p /etc/nix
-        echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+        mkdir -p "$HOME"/.config/nix
+        echo "experimental-features = nix-command flakes" >> "$HOME"/.config/nix/nix.conf
     fi
-    echo "sandbox = false" >> /etc/nix/nix.conf
+    echo "sandbox = false" >> "$HOME"/.config/nix/nix.conf
 
     add_command="nix-channel --add https://nixos.org/channels/$NIX_CHANNEL nixpkgs"
     update_command="nix-channel --update"
