@@ -6,6 +6,14 @@ RunningInDocker() {
     fi
 }
 
+ConfigExists() {
+    if ! grep -q "flakes" < /etc/nix/nix.conf; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 Setup() {
     local add_command
     local update_command
@@ -14,9 +22,11 @@ Setup() {
         echo "Not running in Docker, skipping..."
     fi
 
-    mkdir -p "$HOME"/.config/nix
-    echo "sandbox = false" >> "$HOME"/.config/nix/nix.conf
-    echo "experimental-features = nix-command flakes" >> "$HOME"/.config/nix/nix.conf
+    if ! ConfigExists; then
+        mkdir -p /etc/nix
+        echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+    fi
+    echo "sandbox = false" >> /etc/nix/nix.conf
 
     add_command="nix-channel --add https://nixos.org/channels/$NIX_CHANNEL nixpkgs"
     update_command="nix-channel --update"

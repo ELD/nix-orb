@@ -3,9 +3,12 @@ description: >
   You should use this executor if you want to use Nix in Docker as it's tricky
   to install otherwise.
 
+  By default, this executor uses a Docker image set up to allow for the usage of
+  Nix flakes.
+
   Note: The `nix/install` command is not necessary when using this executor.
 docker:
-  - image: 'nixpkgs/nix:<<parameters.tag>>'
+  - image: 'nixpkgs/nix-flakes:<<parameters.tag>>'
 parameters:
   tag:
     default: nixos-21.11
