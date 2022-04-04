@@ -39,10 +39,10 @@ workflows:
                 name: Clone flake
                 command: |
                   git clone https://github.com/ELD/nix-system.git
-                  cd nix-system
             - run:
                 name: Check flake
                 command: nix flake check -v --show-trace
+                working_directory: nix-system
           filters:
             tags:
               only: /.*/
