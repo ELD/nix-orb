@@ -8,9 +8,9 @@ RunningInDocker() {
 
 ConfigExists() {
     if ! grep -q "flakes" < /etc/nix/nix.conf; then
-        return 0
-    else
         return 1
+    else
+        return 0
     fi
 }
 
