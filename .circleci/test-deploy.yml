@@ -14,7 +14,7 @@ executors:
       - image: << parameters.image >>
   linux-machine:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:202111-02
   macos:
     macos:
       xcode: 13.3.0
@@ -22,15 +22,7 @@ executors:
 workflows:
   test-deploy:
     jobs:
-      - orb-tools/lint:
-          filters:
-            tags:
-              only: /.*/
       - orb-tools/pack:
-          filters:
-            tags:
-              only: /.*/
-      - orb-tools/review:
           filters:
             tags:
               only: /.*/
@@ -41,11 +33,23 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - nix/run-with-cachix:
+          after-cachix:
+            - run:
+                name: Clone flake
+                command: |
+                  git clone https://github.com/ELD/nix-system.git
+            - run:
+                name: Check flake
+                command: nix flake check -v --show-trace
+                working_directory: nix-system
+          filters:
+            tags:
+              only: /.*/
       - upload-release-binaries:
           requires:
+            - nix/run-with-cachix
             - test-nix-install
-            - orb-tools/lint
-            - orb-tools/review
             - orb-tools/pack
           filters:
             tags:
@@ -97,4 +101,3 @@ jobs:
             ls -al
             go get -u github.com/tcnksm/ghr
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace -delete -prerelease ${CIRCLE_TAG} ./dist
-

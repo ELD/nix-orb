@@ -4,8 +4,8 @@ description: >
 usage:
   version: 2.1
   orbs:
-    nix: eld/nix@1.0.0
-  worflows:
+    nix: eld/nix@1.1.0
+  workflows:
     use-my-orb:
       jobs:
         - install-nix
