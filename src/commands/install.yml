@@ -1,35 +1,107 @@
 description: >
-  This command installs the nix package manager
+  This command installs Nix using the DeterminateSystems nix-installer
 
 parameters:
-  extra_nix_config:
+  channels:
+    description: "Channel(s) to add (e.g. `nixpkgs=https://nixos.org/channels/nixpkgs-unstable`)"
     type: string
     default: ""
-    description: "Any extra configuration options to append to the nix.conf file"
-  install_url:
+  extra-conf:
+    description: >
+      Extra configuration lines for `/etc/nix/nix.conf`
+
+      By default, this appends `trusted-users = root $USER` to the extra config
+      so the CI user can configure binary caches.
     type: string
     default: ""
-    description: "The URL to download the Nix installer script from"
-  install_options:
+  init:
+    description: "The init systems to configure, requires `planner: linux-multi` (allowing the choice between `none` or `systemd`)"
+    type: enum
+    default: ""
+    enum: ["", "none", "systemd"]
+  logger:
+    description: "The logger used for the install (e.g. `pretty`, `json`, `full`, `compact`)"
+    type: enum
+    default: ""
+    enum: ["", "pretty", "json", "full", "compact"]
+  mac-case-sensitive:
+    description: "Use a case sensitive volume (`planner: macos` only)"
+    type: boolean
+    default: false
+  mac-encrypt:
+    description: "Force encryption on the volume (`planner: macos` only)"
+    type: boolean
+    default: false
+  mac-root-disk:
+    description: "The root disk of the target (`planner: macos` only)"
     type: string
     default: ""
-    description: "Additional options to pass to the installer script"
-  nix_path:
+  mac-volume-label:
+    description: "The label for the created APFS volume (`planner: macos` only)"
     type: string
     default: ""
-    description: "Sets a custom NIX_PATH environment variable"
-  binary_tag:
+  modify-profile:
+    description: "Modify the user profile to automatically load nix"
+    type: boolean
+    default: false
+  nix-build-group-id:
+    description: "The nix build group GID"
+    type: integer
+    default: -1
+  nix-build-group-name:
+    description: "The Nix build group name"
     type: string
-    default: "v1.0.0"
-    description: "The GitHub release tag to use to download the binary installer script"
+    default: ""
+  nix-build-user-base:
+    description: "The Nix build user base UID (ascending)"
+    type: integer
+    default: -1
+  nix-build-user-count:
+    description: "Number of build users to create"
+    type: integer
+    default: -1
+  nix-build-user-prefix:
+    description: "The Nix build user prefix (user numbers will be postfixed)"
+    type: string
+    default: ""
+  nix-package-url:
+    description: "The Nix package URL"
+    type: string
+    default: ""
+  planner:
+    description: "A planner to use"
+    type: string
+    default: ""
+  reinstall:
+    description: "Force a reinstall if an existing installation is detected (consider backing up `/nix/store`)"
+    type: boolean
+    default: false
+  start-daemon:
+    description: "If the daemon should be started, requires `planner: linux-multi`"
+    type: string
+    default: ""
 
 steps:
   - run:
-      environment:
-        INPUT_EXTRA_NIX_CONFIG: << parameters.extra_nix_config >>
-        INPUT_INSTALL_URL: << parameters.install_url >>
-        INPUT_INSTALL_OPTIONS: << parameters.install_options >>
-        INPUT_NIX_PATH: << parameters.nix_path >>
-        TAG_NAME: << parameters.binary_tag >>
       name: Install Nix
-      command: << include(scripts/install.sh) >>
+      command: << include(scripts/install.js) >>
+      shell: node
+      environment:
+        CHANNELS: << parameters.channels >>
+        NIX_EXTRA_CONF: << parameters.extra-conf >>
+        INIT: << parameters.init >>
+        LOGGER: << parameters.logger >>
+        MAC_CASE_SENSITIVE: << parameters.mac-case-sensitive >>
+        MAC_ENCRYPT: << parameters.mac-encrypt >>
+        MAC_ROOT_DISK: << parameters.mac-root-disk >>
+        MAC_VOLUME_LABEL: << parameters.mac-volume-label >>
+        MODIFY_PROFILE: << parameters.modify-profile >>
+        NIX_BUILD_GROUP_ID: << parameters.nix-build-group-id >>
+        NIX_BUILD_GROUP_NAME: << parameters.nix-build-group-name >>
+        NIX_BUILD_USER_BASE: << parameters.nix-build-user-base >>
+        NIX_BUILD_USER_COUNT: << parameters.nix-build-user-count >>
+        NIX_BUILD_USER_PREFIX: << parameters.nix-build-user-prefix >>
+        NIX_PACKAGE_URL: << parameters.nix-package-url >>
+        PLANNER: << parameters.planner >>
+        REINSTALL: << parameters.reinstall >>
+        START_DAEMON: << parameters.start-daemon >>
