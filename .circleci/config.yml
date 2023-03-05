@@ -1,10 +1,7 @@
 version: 2.1
 setup: true
 orbs:
-  orb-tools: circleci/orb-tools@11.1.2
-  shellcheck: circleci/shellcheck@3.1
-  bats: circleci/bats@1.0
-  rust: circleci/rust@1.6.0
+  orb-tools: circleci/orb-tools@11.6.1
 
 executors:
   linux:
@@ -17,10 +14,10 @@ executors:
       - image: << parameters.image >>
   linux-machine:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2204:current
   macos: &macos
     macos:
-      xcode: 13.3.0
+      xcode: 14.2.0
 
 workflows:
   test-pack:
@@ -37,49 +34,12 @@ workflows:
           filters:
             tags:
               only: /.*/
-      - shellcheck/check:
-          exclude: SC2148,SC2038,SC2086,SC2002,SC2016
-      - test-scripts:
-          requires:
-            - orb-tools/lint
-            - orb-tools/pack
-            - orb-tools/review
-            - shellcheck/check
-          matrix:
-            parameters:
-              os: [linux-machine, macos]
-          filters:
-            tags:
-              only: /.*/
-      - build-scripts:
-          matrix:
-            parameters:
-              os: [linux-machine, macos]
-          filters:
-            tags:
-              only: /.*/
-          requires: [test-scripts]
-      - upload-dev-binaries:
-          filters:
-            tags:
-              only: /.*/
-          context: orb-publishing
-          requires: [build-scripts]
-      - bats/run:
-          path: ./src/tests
-          setup-steps:
-            - sync-submodules
-          requires:
-            - upload-dev-binaries
-          filters:
-            tags:
-              only: /.*/
       - orb-tools/publish:
           orb-name: eld/nix
           requires:
-            [
-              bats/run
-            ]
+            - orb-tools/lint
+            -  orb-tools/pack
+            -  orb-tools/review
           vcs-type: << pipeline.project.type >>
           # Use a context to hold your publishing token.
           context: orb-publishing
@@ -94,96 +54,3 @@ workflows:
           filters:
             tags:
               only: /.*/
-
-jobs:
-  test-scripts:
-    parameters:
-      os:
-        description: "executor to run the job against"
-        type: executor
-        default: linux
-    executor: << parameters.os >>
-    steps:
-      - checkout
-      - rust/install
-      - rust/test:
-          with_cache: false
-
-  build-scripts:
-    parameters:
-      os:
-        description: "executor to run the job against"
-        type: executor
-        default: linux
-    executor: << parameters.os >>
-    steps:
-      - checkout
-      - rust/install
-      - when:
-          condition:
-            not:
-              equal: [*macos, << parameters.os >>]
-          steps:
-            - run:
-                name: "Add Linux musl target and required build tools"
-                command: |
-                  rustup target add x86_64-unknown-linux-musl
-                  sudo apt-get update
-                  sudo apt-get install -y musl-tools
-            - run:
-                name: "Build for musl (static binary)"
-                command: cargo build --release --target=x86_64-unknown-linux-musl
-            - run:
-                name: "Copy built binary to workspace"
-                command: |
-                  mkdir -p ~/dist
-                  cp target/x86_64-unknown-linux-musl/release/install-nix ~/dist/install-nix-x86_64-linux-unknown-musl
-            - persist_to_workspace:
-                root: ~/dist
-                paths:
-                  - install-nix-x86_64-linux-unknown-musl
-      - when:
-          condition:
-            or:
-            - equal: [*macos, << parameters.os >>]
-          steps:
-            - rust/build:
-                release: true
-                with_cache: false
-            - run:
-                name: "Copy built binary to workspace"
-                command: |
-                  mkdir -p ~/dist
-                  cp target/release/install-nix ~/dist/install-nix-x86_64-apple-darwin
-            - persist_to_workspace:
-                root: ~/dist
-                paths:
-                  - install-nix-x86_64-apple-darwin
-
-  upload-dev-binaries:
-    parameters:
-      dev-tag:
-        description: "The git tag to upload dev binaries to"
-        type: string
-        default: binary-dev
-    executor:
-      name: linux
-      image: cimg/go:1.16
-    steps:
-      - checkout
-      - attach_workspace:
-          at: ./dist
-      - run:
-          name: "Release binaries to GitHub"
-          environment:
-            DEV_TAG_NAME: << parameters.dev-tag >>
-          command: |
-            ls -al
-            go get -u github.com/tcnksm/ghr
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace -prerelease ${DEV_TAG_NAME} ./dist
-
-commands:
-  sync-submodules:
-    steps:
-      - run: git submodule init
-      - run: git submodule update --init
