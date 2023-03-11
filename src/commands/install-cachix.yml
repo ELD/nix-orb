@@ -1,0 +1,21 @@
+description: >
+  This command installs `cachix` for use to configure binary caches
+
+  For private caches, you must have a context containing a `CACHIX_AUTH_TOKEN`
+  environment variable.
+
+parameters:
+  cachix-installable:
+    description: >
+      The installable path for Cachix
+
+      Defaults to `github:nixos/nixpkgs-unstable#cachix`
+    type: string
+    default: "github:nixos/nixpkgs/nixpkgs-unstable#cachix"
+
+steps:
+  - run:
+      name: Install Cachix
+      environment:
+        CACHIX_INSTALLABLE: << parameters.cachix-installable >>
+      command: nix profile install $CACHIX_INSTALLABLE
