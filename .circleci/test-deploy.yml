@@ -78,4 +78,7 @@ jobs:
       - nix/install-cachix
       - nix/with-cachix:
           cachix-user: eld
-          nix-command: nix build nixpkgs#cowsay
+          nix-command: nix profile install nixpkgs#cowsay.out
+      - run:
+          name: Cowsay command
+          command: cowsay "Hello, nix-orb!"
