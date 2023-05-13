@@ -1,7 +1,6 @@
 version: 2.1
 orbs:
-  nix: eld/nix@dev:<<pipeline.git.revision>>
-  orb-tools: circleci/orb-tools@11.6.1
+  orb-tools: circleci/orb-tools@12.0.2
 
 executors:
   linux:
@@ -49,15 +48,15 @@ workflows:
               only: /.*/
           context: nix
       - orb-tools/publish:
-          orb-name: eld/nix
+          orb_name: eld/nix
           requires:
             - test-nix-install
             - orb-tools/lint
             - orb-tools/review
             - orb-tools/pack
           context: orb-publishing
-          vcs-type: << pipeline.project.type >>
-          pub-type: production
+          vcs_type: << pipeline.project.type >>
+          pub_type: production
           filters:
             tags:
               only: /^v.*/
@@ -75,8 +74,8 @@ jobs:
     steps:
       - checkout
       - nix/install
-      - nix/install-cachix
-      - nix/with-cachix:
+      - nix/install_cachix
+      - nix/with_cachix:
           cachix-user: eld
           nix-command: nix profile install nixpkgs#cowsay.out
       - run:

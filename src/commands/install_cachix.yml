@@ -5,17 +5,17 @@ description: >
   environment variable.
 
 parameters:
-  cachix-installable:
+  cachix_installable:
     description: >
       The installable path for Cachix
 
       Defaults to `github:nixos/nixpkgs-unstable#cachix`
     type: string
-    default: "github:nixos/nixpkgs/nixpkgs-unstable#cachix"
+    default: "github:nixos/nixpkgs/nixpkgs_unstable#cachix"
 
 steps:
   - run:
       name: Install Cachix
       environment:
-        CACHIX_INSTALLABLE: << parameters.cachix-installable >>
+        CACHIX_INSTALLABLE: << parameters.cachix_installable >>
       command: nix profile install $CACHIX_INSTALLABLE

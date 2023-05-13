@@ -1,7 +1,7 @@
 version: 2.1
 setup: true
 orbs:
-  orb-tools: circleci/orb-tools@11.6.1
+  orb-tools: circleci/orb-tools@12.0.2
 
 executors:
   linux:
@@ -35,12 +35,12 @@ workflows:
             tags:
               only: /.*/
       - orb-tools/publish:
-          orb-name: eld/nix
+          orb_name: eld/nix
           requires:
             - orb-tools/lint
             - orb-tools/pack
             - orb-tools/review
-          vcs-type: << pipeline.project.type >>
+          vcs_type: << pipeline.project.type >>
           # Use a context to hold your publishing token.
           context: orb-publishing
           filters:
@@ -48,8 +48,9 @@ workflows:
               only: /.*/
       # Triggers the next workflow in the Orb Development Kit.
       - orb-tools/continue:
-          pipeline-number: << pipeline.number >>
-          vcs-type: << pipeline.project.type >>
+          orb_name: eld/nix
+          pipeline_number: << pipeline.number >>
+          vcs_type: << pipeline.project.type >>
           requires: [orb-tools/publish]
           filters:
             tags:
