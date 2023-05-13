@@ -1,0 +1,29 @@
+description: >
+  This command wraps the specified parameters with Cachix's `watch_exec` command
+  to watch changed paths and upload them to your Cachix cache.
+
+  In order to write to the cache, you must have a context containing a `CACHIX_AUTH_TOKEN`
+  environment variable.
+
+parameters:
+  cachix_user:
+    description: "The user/cache to use and authenticate against"
+    type: string
+    default: ""
+  cache_name:
+    description: "The cache to use before running the `watch_exec` subcommand"
+    type: string
+    default: ""
+  nix_command:
+    description: "The nix command to wrap with the `watch_exec` command"
+    type: string
+    default: ""
+
+steps:
+  - run:
+      name: Cachix `watch_exec -- << parameters.nix_command >>`
+      environment:
+        CACHIX_USER: << parameters.cachix_user >>
+        NIX_COMMAND: << parameters.nix_command >>
+        CACHE_NAME: << parameters.cache_name >>
+      command: << include(scripts/with_cachix.sh) >>
